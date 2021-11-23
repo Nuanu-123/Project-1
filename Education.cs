@@ -1,4 +1,6 @@
-﻿using MarsQA_1.Helpers;
+﻿using CalculatorSelenium.Specs.Drivers;
+using MarsQA_1.Helpers;
+using MarsQA_1.Pages;
 using NUnit.Framework;
 using TechTalk.SpecFlow;
 using TechTalk.SpecFlow.Assist;
@@ -8,8 +10,7 @@ namespace MarsQA_1.Feature
     [Binding]
     public class Education
     {
-        MarsQA_1.SpecflowPages.Pages.EducationProfile EducationPage = new SpecflowPages.Pages.EducationProfile();
-
+        MarsQA_1.Pages.EducationProfile EducationPage = new Pages.EducationProfile();
         [When(@"User adds new education details  ""(.*)"",""(.*)"", ""(.*)"",""(.*)"",""(.*)""")]
 
         public void WhenUserAddsNewEducationDetails(string University, string Country, string Title, string Degree, int YearOfGraduation)

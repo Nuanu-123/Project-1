@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using MarsQA_1.Helpers;
+using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using static MarsQA_1.Helpers.CommonMethods;
@@ -14,8 +16,9 @@ namespace MarsQA_1.Pages
         IWebElement SkillTextField => Driver.driver.FindElement(By.XPath("//INPUT[@placeholder='Add Skill']"));
         IWebElement SelectLevel => Driver.driver.FindElement(By.XPath("//SELECT[@class='ui fluid dropdown'][@name='level']"));
         IWebElement AddButton => Driver.driver.FindElement(By.XPath("(//input[@type = 'button'][@value = 'Add'])"));
-         IWebElement UpdateBtn => Driver.driver.FindElement(By.XPath("(//input[@type = 'button'][@value = 'Update'])"));
-       
+        IWebElement UpdateBtn => Driver.driver.FindElement(By.XPath("(//input[@type = 'button'][@value = 'Update'])"));
+        IList<IWebElement> SkillTableRow => Driver.driver.FindElements(By.XPath("(//table[@class='ui fixed table'])[2]/tbody/tr"));
+
         public void AddSkill(string Skill, string Level)
         {
             SkillTab.Click();
@@ -26,21 +29,22 @@ namespace MarsQA_1.Pages
             AddButton.Click();
             Thread.Sleep(2000);
         }
-        public void VerifySkillAdded(string Skills)
-        {
 
-            bool SkillFound = false;
-            IWebElement tableElement = Driver.driver.FindElement(By.XPath("(//table[@class='ui fixed table'])[2]"));
-            IList<IWebElement> tableRow = tableElement.FindElements(By.TagName("tbody"));
-            foreach (IWebElement row in tableRow)
+        public void VerifySkillAdded(string Skill)
+        {
+            var ActualData = Skill;
+            var row = SkillTableRow.Count;
+            for (var i = 1; i <= row; i++)
             {
-                if (row.Text.Contains(Skills))
+                IWebElement AddedLanguage = Driver.driver.FindElement(By.XPath("((//table[@class='ui fixed table'])[2]/tbody/tr[1]/td[1])[" + i + "]"));
+                string ExpectedData = AddedLanguage.GetAttribute("innerText");
+                if (ActualData == ExpectedData)
                 {
-                    SkillFound = true;
-                    SaveScreenShotClass.SaveScreenshot((IWebDriver)Driver.driver, "Skill Added");
-                    break;
+                    Assert.AreEqual(ExpectedData, ActualData);
+                    return;
                 }
             }
+            Assert.Fail("No matching records");
         }
 
         public void EditSkillbutton(string Skill)
@@ -50,20 +54,8 @@ namespace MarsQA_1.Pages
             IWebElement EditButtonPen = Driver.driver.FindElement(By.XPath("//td[text()='" + Skill + "']/following::td[2]/descendant::i[@class='outline write icon']"));
             EditButtonPen.Click();
         }
-        public void VerifyEditSkill(string Skill, string Level)
-
-        {
-            SkillTab.Click();
-            IList<IWebElement> LangTableRow = Driver.driver.FindElements(By.XPath("(//table[@class='ui fixed table'])[1]/tbody/tr"));
-            var rownum = LangTableRow.Count;
-            for (var i = 1; i <= rownum; i++)
-            {
-                if ((Skill == Driver.driver.FindElement(By.XPath("((//table[@class='ui fixed table'])[2]/tbody/tr[1]/td[1])[" + i + "]")).Text) &&
-                    (Level == Driver.driver.FindElement(By.XPath("((//table[@class='ui fixed table'])[2]/tbody/tr[1]/td[2])[" + i + "]")).Text))
-                    SaveScreenShotClass.SaveScreenshot((IWebDriver)Driver.driver, "Skill level updated");
-                break;
- }
-        }
+       
+      
         public void UpdateSkill(string UpdatedSkill, string UpdatedLevel)
         {
             SkillTextField.Clear();
@@ -72,7 +64,23 @@ namespace MarsQA_1.Pages
             selectElement.SelectByText(UpdatedLevel);
             UpdateBtn.Click();
             Thread.Sleep(2000);
+        }
+        public void VerifyEditSkill(string Skill, string Level)
 
+        {
+            SkillTab.Click();
+            var rownum = SkillTableRow.Count;
+            for (var i = 1; i <= rownum; i++)
+            {
+                string SkillName = Driver.driver.FindElement(By.XPath("((//table[@class='ui fixed table'])[2]/tbody/tr[1]/td[1])[" + i + "]")).Text;
+                string LevelName = Driver.driver.FindElement(By.XPath("((//table[@class='ui fixed table'])[2]/tbody/tr[1]/td[2])[" + i + "]")).Text;
+                if ((Skill == SkillName) && (Level == LevelName))
+                {
+                    Assert.AreEqual(Level, LevelName);
+                    return;
+                }
+            }
+            Assert.Fail("Not updated");
         }
         // Delete an updated record
         public void DeleteSkill(string UpdatedSkill)
@@ -82,16 +90,19 @@ namespace MarsQA_1.Pages
             ClearButtonPen.Click();
             Thread.Sleep(6000);
         }
-        public void VerifySkillDeleted(string UpdatedSkill)
+       public void VerifySkillDeleted(string UpdatedSkill)
         {
             SkillTab.Click();
-            Thread.Sleep(6000);
+            Thread.Sleep(2000);
+
             if (Driver.driver.PageSource.Contains("" + UpdatedSkill + ""))
             {
                 SaveScreenShotClass.SaveScreenshot((IWebDriver)Driver.driver, "Skill Not Deleted");
+                Assert.Fail("Skill detail not deleted");
             }
             else
             {
+                Assert.Pass("Skill detail deleted");
                 SaveScreenShotClass.SaveScreenshot((IWebDriver)Driver.driver, "Skill Deleted");
             }
 
@@ -99,4 +110,3 @@ namespace MarsQA_1.Pages
 
     }
 }
-

@@ -4,6 +4,8 @@ using OpenQA.Selenium.Support.UI;
 using System.Threading;
 using System.Collections.Generic;
 using static MarsQA_1.Helpers.CommonMethods;
+using NUnit.Framework;
+using System;
 
 namespace MarsQA_1.Pages
 {
@@ -15,6 +17,7 @@ namespace MarsQA_1.Pages
         IWebElement SelectLevel => Driver.driver.FindElement(By.XPath("//SELECT[@class='ui dropdown'][@name='level']"));
         IWebElement AddButton => Driver.driver.FindElement(By.XPath("//input[@type='button'][@value='Add']"));
         IWebElement UpdateBtn => Driver.driver.FindElement(By.XPath("(//input[@type = 'button'][@value = 'Update'])"));
+        IList<IWebElement> EduTableRow => Driver.driver.FindElements(By.XPath("(//table[@class='ui fixed table'])[1]/tbody/tr"));
         public void AddLanguage(string Languages, string Levels)
         {
             LanguageTab.Click();
@@ -25,39 +28,24 @@ namespace MarsQA_1.Pages
             AddButton.Click();
             Thread.Sleep(2000);
         }
-        //Verify Language is added successfully
         public void VerifyAddLanguage(string Language)
         {
-            bool LanguagePresent = false;
-            IWebElement tableElement = Driver.driver.FindElement(By.XPath("(//table[@class='ui fixed table'])[1]"));
-            IList<IWebElement> tableRow = tableElement.FindElements(By.TagName("tbody"));
-            foreach (IWebElement row in tableRow)
+            var ActualData = Language;
+            var row = EduTableRow.Count;
+            for (var i = 1; i <= row; i++)
             {
-                if (row.Text.Contains(Language))
+                IWebElement AddedLanguage = Driver.driver.FindElement(By.XPath("((//table[@class='ui fixed table'])[1]/tbody/tr[1]/td[1])[" + i + "]"));
+                string ExpectedData = AddedLanguage.GetAttribute("innerText");
+                if (ActualData == ExpectedData)
                 {
-                    LanguagePresent = true;
-                    SaveScreenShotClass.SaveScreenshot((IWebDriver)Driver.driver, "Language Added");
-                    break;
+                    Assert.AreEqual(ExpectedData, ActualData);
+                    return;
                 }
             }
-        }
-        //Verify Langauge is deleted from profile
-        public void VerifyLanguageDeleted(string Langauge)
-        {
-            LanguageTab.Click();
-            Thread.Sleep(2000);
-
-            if (Driver.driver.PageSource.Contains("" + Langauge + ""))
-            {
-                SaveScreenShotClass.SaveScreenshot((IWebDriver)Driver.driver, "Language not Deleted");
-            }
-            else
-            {
-                SaveScreenShotClass.SaveScreenshot((IWebDriver)Driver.driver, "Language Deleted");
-            }
-
+            Assert.Fail("No matching records");
         }
 
+       
         public void EditLanguage(string Languages)
         {
             LanguageTab.Click();
@@ -80,6 +68,24 @@ namespace MarsQA_1.Pages
             IWebElement RemovePen = Driver.driver.FindElement(By.XPath("//td[text()='" + UpdatedLanguages + "']/following::td[2]/descendant::i[@class='remove icon']"));
             RemovePen.Click();
             Thread.Sleep(8000);
+
+        }
+        //Verify Langauge is deleted from profile
+        public void VerifyLanguageDeleted(string Langauge)
+        {
+            LanguageTab.Click();
+            Thread.Sleep(2000);
+
+            if (Driver.driver.PageSource.Contains("" + Langauge + ""))
+            {
+                SaveScreenShotClass.SaveScreenshot((IWebDriver)Driver.driver, "Language not Deleted");
+                Assert.Fail("Language detail not deleted");
+            }
+            else
+            {
+                Assert.Pass("Language detail deleted");
+                SaveScreenShotClass.SaveScreenshot((IWebDriver)Driver.driver, "Language Deleted");
+            }
 
         }
     }
